@@ -61,6 +61,8 @@ reset;
 
 ### Port Forwarding
 
+TODO -> PORT FORWARDING SCENNARIO -> JMPHOST INTERNAL NETWORK
+
 if your port forward doesn't work but you're certain it should: did you check the host firewall? :)
 
 #### Local Port Forward
