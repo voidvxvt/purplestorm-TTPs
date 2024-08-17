@@ -6,11 +6,11 @@ A collection of commands, tools, techniques and procedures of the purplestorm ct
 
 - [Basics](#basics)
   - [Stabilizing Linux shell](#stabilizing-linux-shell)
-  - [Port forwarding](#port-forwarding-1)
-  - [Transfering files](#transfering-files)
+  - [Port Forwarding](#port-forwarding-1)
+  - [Transfering Files](#transfering-files)
 - [Tooling](#tooling)
   - [Swaks](#swaks)
-  - [Ligolo-ng](#ligolo-ng)
+  - [ligolo-ng](#ligolo-ng)
   - [CrackMapExec](CrackMapExec.md)
 - [C2](#c2)
   - [Sliver](Sliver.md)
@@ -51,8 +51,7 @@ stty raw -echo; fg
 ```
 this allows for __CTRL+L__ and __CTRL+C__ to work.
 
-4. set the TERM variable for `clear` to work.
-listing alias to not miss any info while 
+4. 
 ```shell
 export SHELL=/bin/bash;
 export TERM=xterm;
@@ -61,17 +60,25 @@ stty rows 110 cols 240;
 reset;
 ```
 
-### (Reverse) Port Forwarding
+### Port Forwarding
 
-#### SSH:
+if your port forward doesn't work but you're certain it should, did you check the host firewall? :)
 
-TODO local and remote port forward
-
-On kali:
-
+#### Local Port Forward
 ```shell
-ssh -N -L 80:localhost:80 user@10.10.10.10 -C
+ssh -L LHOST_IF_ADDR:LPORT:RHOST_IP:RPORT root@10.13.37.16 -i root.key -fN
 ```
+`-L`: `[bind_address:]port:host:hostport`
+`-fN`: `-f` backgrounds the process immediately. `-N` no shell, only sets up the connection.
+the portfwd happens on __your local machine__ -> listening socket will be on __your local machine__  
+local port <- remote port  
+a local port forward is used to make an application listening on a target machine's localhost, available on your local machine  
+
+#### Remote Port Forward
+TODO
+a remote port forward is used to make an application listening on your local machine available on a traget machine
+for ex. forward your netcat listener to a target machine's internal network interface so a reverse shell on the internal network can connect back to you via the target host your listener is forwarded to
+
 
 #### Chisel:
 
