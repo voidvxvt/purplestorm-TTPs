@@ -9,7 +9,7 @@ TODO -> https://book.hacktricks.xyz/generic-methodologies-and-resources/tunnelin
 TODO
 
 
-## SOCKS Proxying
+## SOCKS Proxying / Dynamic Port Forwarding
 
 ### SSH
 
