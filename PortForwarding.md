@@ -20,6 +20,13 @@ local port <- remote port
 a local port forward is used to make an application listening on a target machine's localhost, available on your local machine  
 
 
+you can forward sockets back to TCP 
+```bash
+ssh -L 127.0.0.1:5432:/var/run/postgresql/.s.PGSQL.5432 -fN
+```
+
+
+
 ### ligolo-ng
 
 TODO
