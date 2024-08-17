@@ -40,8 +40,32 @@ portfwd add -b 127.0.0.1:8080 -r 172.16.139.10:8080
 
 ### SSH
 
+```bash
+ssh -R RHOST_IF_ADDR:RPORT:LHOST_IP:LPORT root@10.13.37.16 -i root.key -fN
+```
+```bash
+sshpass -p 'HTB_@cademy_stdnt!' ssh -R 172.16.1.5:443:10.10.16.80:443 htb-student@10.129.72.241 -fN
+```
+```bash
+ssh -i root.id_rsa -R 172.16.1.5:80:10.10.16.80:80 root@10.129.72.241 -fN
+```
+
+`-R [bind_address:]port:host:hostport`
+portfwd happens on remote machine -> listening socket will be on the remote machine
+local port -> remote port
 a remote port forward is used to make an application listening on your local machine available on a traget machine
 for ex. forward your netcat listener to a target machine's internal network interface so a reverse shell on the internal network can connect back to you via the target host your listener is forwarded to
+
+you need to login as root in order to use a port lower than 1025
+
+`/etc/ssh/sshd_config` -> `GatewayPorts clientspecified`
+```bash
+sed -r 's/(#)(GatewayPorts\ ).*$/\2clientspecified/g' -i /etc/ssh/sshd_config
+```
+reload the ssh daemon in order to load the new configuration:
+```bash
+systemctl reload sshd.service
+```
 
 
 ### ligolo-ng
